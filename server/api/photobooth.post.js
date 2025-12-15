@@ -23,8 +23,14 @@ export default defineEventHandler(async (event) => {
 
     // simpan ke database
     const result = await pool.query(
-      "INSERT INTO photobooth_photos (session_id, photo_url) VALUES ($1, $2) RETURNING *",
-      [sid, `/photos/${filename}`]
+      `INSERT INTO photobooth_photos (session_id, photo_url, raw)
+   VALUES ($1, $2, $3)
+   RETURNING *`,
+      [
+        sid,
+        `/photos/${filename}`,
+        imageBase64, // ✅ SIMPAN BASE64 APA ADANYA
+      ]
     );
 
     return { success: true, data: result.rows[0], sessionId: sid };
