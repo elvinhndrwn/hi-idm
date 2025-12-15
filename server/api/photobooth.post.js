@@ -14,12 +14,12 @@ export default defineEventHandler(async (event) => {
 
     const sid = sessionId || uuidv4();
     const filename = `${sid}_${Date.now()}.png`;
-    // const photosDir = path.resolve("./public/photos");
-    // if (!fs.existsSync(photosDir)) fs.mkdirSync(photosDir, { recursive: true });
+    const photosDir = path.resolve("./public/photos");
+    if (!fs.existsSync(photosDir)) fs.mkdirSync(photosDir, { recursive: true });
 
-    // const filepath = path.join(photosDir, filename);
-    // const buffer = Buffer.from(imageBase64.split(",")[1], "base64");
-    // fs.writeFileSync(filepath, buffer);
+    const filepath = path.join(photosDir, filename);
+    const buffer = Buffer.from(imageBase64.split(",")[1], "base64");
+    fs.writeFileSync(filepath, buffer);
 
     // simpan ke database
     const result = await pool.query(
