@@ -39,7 +39,7 @@
     </h1>
 
     <p class="subtitle text-lg md:text-2xl mb-8 text-white/80">
-      Coba klik tombol explore dibawah ini yak, semoga sukaaaak hehe 💕
+      Klik tombol explore dibawah ini yaa, semoga sukaaaak hehe 💕
     </p>
 
     <button
