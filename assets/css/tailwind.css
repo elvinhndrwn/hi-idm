@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Custom Cute Text --- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Custom Cute Text --- */
+.text-outline-soft {
+  color: #5d688a;
+  text-shadow: 1px 1px 0 #ffffff, -1px 1px 0 #ffffff, 1px -1px 0 #ffffff,
+    -1px -1px 0 #ffffff;
+}
+
+.text-pastel-glow {
+  color: #5d688a;
+  text-shadow: 0 0 8px rgba(255, 183, 197, 0.7);
+}
+
+.text-cute {
+  color: #5d688a;
+  text-shadow: 1px 1px 0 #ffffff, -1px 1px 0 #ffffff, 1px -1px 0 #ffffff,
+    -1px -1px 0 #ffffff, 0 0 10px rgba(255, 183, 197, 0.5);
+}
+
+.text-outline-soft {
+  color: #5d688a;
+  text-shadow: 1px 1px 0 #ffffff, -1px 1px 0 #ffffff, 1px -1px 0 #ffffff,
+    -1px -1px 0 #ffffff;
+}
+
+.text-pastel-glow {
+  color: #5d688a;
+  text-shadow: 0 0 8px rgba(255, 183, 197, 0.7);
+}
+
+.text-cute {
+  color: #5d688a;
+  text-shadow: 1px 1px 0 #ffffff, -1px 1px 0 #ffffff, 1px -1px 0 #ffffff,
+    -1px -1px 0 #ffffff, 0 0 10px rgba(255, 183, 197, 0.5);
+}
+
+/* --- Space Background --- */
+.space-bg {
+  background: radial-gradient(
+    circle at top,
+    #1b1f3b 0%,
+    #0b0d17 45%,
+    #05060a 100%
+  );
+}
+
+.orbit {
+  pointer-events: none;
+}
+
+.planet {
+  pointer-events: auto;
+  z-index: 20;
+}
