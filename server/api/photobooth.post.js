@@ -17,8 +17,8 @@ export default defineEventHandler(async (event) => {
     // const photosDir = path.resolve("./public/photos");
     // if (!fs.existsSync(photosDir)) fs.mkdirSync(photosDir, { recursive: true });
 
-    const filepath = path.join(photosDir, filename);
-    const buffer = Buffer.from(imageBase64.split(",")[1], "base64");
+    // const filepath = path.join(photosDir, filename);
+    // const buffer = Buffer.from(imageBase64.split(",")[1], "base64");
     // fs.writeFileSync(filepath, buffer);
 
     // simpan ke database
