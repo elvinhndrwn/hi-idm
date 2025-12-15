@@ -7,6 +7,7 @@ const pool = new Pool({
   database: "playground_ed5d",
   password: "x0xx62EwTLHX3WQbOUgO84HKMJ2GbPB5",
   port: 5432,
+  ssl: { rejectUnauthorized: false },
 });
 
 export default pool;
