@@ -74,16 +74,16 @@ const memories = [
   },
   {
     title: "📍 RS Bethesda",
-    description: "Nganterin princess ke IGD samnpe harus pake Emergency Bed",
+    description: "Nganterin princess ke IGD sampe harus pake Emergency Bed",
     image: "/images/jogja/3.jpeg",
   },
   {
-    title: "📍XXXX",
+    title: "📍Jl. Magelang",
     description: "Nge date ke tempat paling sepi wkwk",
     image: "/images/jogja/4.jpeg",
   },
   {
-    title: "📍XXXX",
+    title: "📍Jl. Damai",
     description: "Pertama confess ke kamu hihi.",
     image: "/images/jogja/5.jpeg",
   },
@@ -93,12 +93,12 @@ const memories = [
     image: "/images/jogja/6.jpeg",
   },
   {
-    title: "📍 XXXX",
+    title: "📍 Jl. Gejayan",
     description: "Mam sop ayaaammm.",
     image: "/images/jogja/7.jpeg",
   },
   {
-    title: "📍 Lab Art Parfume",
+    title: "📍 Lab Art",
     description: "Gatau suka aja motoin kamu hehe",
     image: "/images/jogja/8.jpeg",
   },
