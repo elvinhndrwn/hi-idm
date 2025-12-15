@@ -82,7 +82,7 @@ const userId = "user123"; // ganti sesuai user session / login
 
 // Hadiah 2–12
 const gifts = [
-  "Sepatu", // 2
+  "Checkoutin Shopee", // 2
   "Octopay 50K", // 3
   "Zonk 😭", // 4
   "Pulsa 100K", // 5
@@ -91,7 +91,7 @@ const gifts = [
   "Mie Goreng Satu Kardus", // 8
   "Dompet", // 9
   "Zonk 😭", // 10
-  "Buku", // 11
+  "Chatime 2X", // 11
   "Skincare", // 12
 ];
 

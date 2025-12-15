@@ -51,9 +51,10 @@ const score = ref(0);
 const activeStar = ref(null);
 
 const messages = [
-  "Thank you for bring me a thousand smiles 🙂",
+  "Kalau aku udah ke Jakarta, hal yang paling aku tunggu selain gajian itu Pap dari kamu hehe 🙂",
   "Kamu cantik, pake bangeettt!",
-  "Kamu itu orangnya baik, mandiri, pinter, dan yang pasti strooonggg!",
+  "HP aku memorinya banyak kok yang kalau pap muka jangan yg sekali liat ya :)",
+  "Kamu itu orangnya asik, baik, pinter, dan banyak deh pokoknya aku sukaaaa!",
   "Jangan pernah jadi orang sombong ya kalo udah sukses.",
   "Aku bersyukur bisa ketemu dan kenal sama Kamu.",
   "Jangan pernah nyerah sama apa yang belum kamu dapetin, semangat!",
