@@ -14,14 +14,7 @@ export default defineEventHandler(async (event) => {
 
     const sid = sessionId || uuidv4();
     const filename = `${sid}_${Date.now()}.png`;
-    const photosDir = path.resolve("./public/photos");
-    if (!fs.existsSync(photosDir)) fs.mkdirSync(photosDir, { recursive: true });
 
-    const filepath = path.join(photosDir, filename);
-    const buffer = Buffer.from(imageBase64.split(",")[1], "base64");
-    fs.writeFileSync(filepath, buffer);
-
-    // simpan ke database
     const result = await pool.query(
       `INSERT INTO photobooth_photos (session_id, photo_url, raw)
    VALUES ($1, $2, $3)
@@ -32,6 +25,15 @@ export default defineEventHandler(async (event) => {
         imageBase64, // ✅ SIMPAN BASE64 APA ADANYA
       ]
     );
+
+    const photosDir = path.resolve("./public/photos");
+    if (!fs.existsSync(photosDir)) fs.mkdirSync(photosDir, { recursive: true });
+
+    const filepath = path.join(photosDir, filename);
+    const buffer = Buffer.from(imageBase64.split(",")[1], "base64");
+    fs.writeFileSync(filepath, buffer);
+
+    // simpan ke database
 
     return { success: true, data: result.rows[0], sessionId: sid };
   } catch (err) {
