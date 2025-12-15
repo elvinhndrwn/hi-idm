@@ -20,9 +20,12 @@
 
       <!-- ORBIT 1 -->
       <div class="orbit orbit-1">
-        <div class="planet jogja">
+        <div
+          class="planet jogja"
+          :class="{ active: activeCity === 'jogja' }"
+          @click.stop="toggleCity('jogja')"
+        >
           YK
-
           <div class="tooltip">
             <h4>Yogyakarta 🤍</h4>
             <p>The city where our story began.</p>
@@ -35,15 +38,15 @@
 
       <!-- ORBIT 2 -->
       <div class="orbit orbit-2">
-        <div class="planet garut">
+        <div
+          class="planet garut"
+          :class="{ active: activeCity === 'garut' }"
+          @click.stop="toggleCity('garut')"
+        >
           GRT
-
           <div class="tooltip">
-            <h4>Garut ✨</h4>
-            <p>
-              The haven of our first escape <br />
-              and my very first summit.
-            </p>
+            <h4>Yogyakarta 🤍</h4>
+            <p>The city where our story began.</p>
             <button class="tooltip-btn" @click="goToCity('garut')">
               See memories
             </button>
@@ -53,12 +56,15 @@
 
       <!-- ORBIT 3 -->
       <div class="orbit orbit-3">
-        <div class="planet malang">
+        <div
+          class="planet malang"
+          :class="{ active: activeCity === 'malang' }"
+          @click.stop="toggleCity('malang')"
+        >
           MLG
-
           <div class="tooltip">
-            <h4>Malang 🌙</h4>
-            <p>Our lips first traced a memory.</p>
+            <h4>Yogyakarta 🤍</h4>
+            <p>The city where our story began.</p>
             <button class="tooltip-btn" @click="goToCity('malang')">
               See memories
             </button>
@@ -271,6 +277,11 @@
 </style>
 
 <script setup>
+// Toggle tooltip saat klik planet
+const toggleCity = (city) => {
+  activeCity.value = activeCity.value === city ? null : city;
+};
+
 import { ref, onMounted, onBeforeUnmount } from "vue";
 
 const activeCity = ref(null);
