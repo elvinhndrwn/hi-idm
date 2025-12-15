@@ -45,8 +45,11 @@
         >
           GRT
           <div class="tooltip">
-            <h4>Yogyakarta 🤍</h4>
-            <p>The city where our story began.</p>
+            <h4>Garut ✨</h4>
+            <p>
+              The haven of our first escape <br />
+              and my very first summit.
+            </p>
             <button class="tooltip-btn" @click="goToCity('garut')">
               See memories
             </button>
@@ -63,8 +66,8 @@
         >
           MLG
           <div class="tooltip">
-            <h4>Yogyakarta 🤍</h4>
-            <p>The city where our story began.</p>
+            <h4>Malang 🌙</h4>
+            <p>Our lips first traced a memory.</p>
             <button class="tooltip-btn" @click="goToCity('malang')">
               See memories
             </button>

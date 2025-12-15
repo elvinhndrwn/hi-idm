@@ -34,7 +34,7 @@
 
     <!-- Hasil hadiah -->
     <div v-if="gift" class="mb-6 text-xl font-bold text-yellow-300 animate-pop">
-      🎉 You got: {{ gift }}
+      🎉 Yeey kamu dapet: {{ gift }}
     </div>
 
     <!-- Info remaining roll -->
