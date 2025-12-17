@@ -1,7 +1,5 @@
-import fs from "fs";
-import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import pool from "~/server/utils/db"; // gunakan pool sesuai setup kita sebelumnya
+import pool from "~/server/utils/db";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -13,29 +11,32 @@ export default defineEventHandler(async (event) => {
     }
 
     const sid = sessionId || uuidv4();
-    const filename = `${sid}_${Date.now()}.png`;
+
+    // Parse base64 → buffer
+    const matches = imageBase64.match(/^data:(.+);base64,(.+)$/);
+    if (!matches) {
+      return { success: false, message: "Invalid image format" };
+    }
+
+    const mimeType = matches[1];
+    const buffer = Buffer.from(matches[2], "base64");
 
     const result = await pool.query(
-      `INSERT INTO photobooth_photos (session_id, photo_url, raw)
-   VALUES ($1, $2, $3)
-   RETURNING *`,
-      [
-        sid,
-        `/photos/${filename}`,
-        imageBase64, // ✅ SIMPAN BASE64 APA ADANYA
-      ]
+      `
+      INSERT INTO photobooth_photos (session_id, image, mime_type)
+      VALUES ($1, $2, $3)
+      RETURNING id
+      `,
+      [sid, buffer, mimeType]
     );
 
-    const photosDir = path.resolve("./public/photos");
-    if (!fs.existsSync(photosDir)) fs.mkdirSync(photosDir, { recursive: true });
-
-    const filepath = path.join(photosDir, filename);
-    const buffer = Buffer.from(imageBase64.split(",")[1], "base64");
-    fs.writeFileSync(filepath, buffer);
-
-    // simpan ke database
-
-    return { success: true, data: result.rows[0], sessionId: sid };
+    return {
+      success: true,
+      data: {
+        id: result.rows[0].id,
+        sessionId: sid,
+      },
+    };
   } catch (err) {
     console.error(err);
     return { success: false, message: "Failed to save photo" };

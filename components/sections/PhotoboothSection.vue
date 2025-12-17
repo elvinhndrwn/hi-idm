@@ -22,7 +22,9 @@
         v-if="isUploading"
         class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl"
       >
-        <div class="text-white font-medium animate-pulse">Saving... ⏳</div>
+        <div class="text-white font-medium animate-pulse">
+          Saving, please wait... ⏳
+        </div>
       </div>
     </div>
 
@@ -53,10 +55,10 @@
     <div class="flex gap-4 flex-wrap justify-center mt-4">
       <div
         v-for="(photo, i) in captures"
-        :key="i"
+        :key="photo.id"
         class="w-32 h-32 rounded-xl overflow-hidden"
       >
-        <img :src="photo.url" class="w-full h-full object-cover" />
+        <img :src="`/api/${photo.id}`" class="w-full h-full object-cover" />
       </div>
     </div>
 
@@ -84,6 +86,7 @@ const overlay = ref("/images/overlay.png");
 // Open camera
 const openCamera = async () => {
   cameraOpen.value = true;
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "user" },
@@ -97,14 +100,14 @@ const openCamera = async () => {
 
 // Capture photo
 const capturePhoto = async () => {
-  if (captures.value.length >= 3) return;
-  if (isUploading.value) return;
+  if (captures.value.length >= 3 || isUploading.value) return;
 
   isUploading.value = true;
 
   const canvas = document.createElement("canvas");
   canvas.width = videoRef.value.videoWidth;
   canvas.height = videoRef.value.videoHeight;
+
   const ctx = canvas.getContext("2d");
 
   // flip horizontal (anti mirror)
@@ -125,11 +128,13 @@ const capturePhoto = async () => {
       },
     });
 
-    sessionId.value = response.sessionId;
-    captures.value.push({ url: response.data.photo_url });
+    sessionId.value = response.data.sessionId;
+
+    captures.value.push({
+      id: response.data.id,
+    });
   } catch (err) {
     console.error("Upload failed:", err);
-    captures.value.push({ url: imageBase64 });
   } finally {
     isUploading.value = false;
   }
@@ -158,7 +163,7 @@ const downloadMerged = async () => {
         new Promise((resolve, reject) => {
           const img = new Image();
           img.crossOrigin = "anonymous";
-          img.src = c.url;
+          img.src = `/api/${c.id}`;
           img.onload = () => resolve(img);
           img.onerror = reject;
         })
@@ -174,6 +179,7 @@ const downloadMerged = async () => {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
+
   const ctx = canvas.getContext("2d");
 
   let y = 0;
@@ -186,6 +192,7 @@ const downloadMerged = async () => {
   const overlayImg = new Image();
   overlayImg.src = overlay.value;
   await new Promise((r) => (overlayImg.onload = r));
+
   ctx.drawImage(overlayImg, 0, 0, width, height);
 
   const link = document.createElement("a");
