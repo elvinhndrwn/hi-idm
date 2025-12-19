@@ -153,6 +153,18 @@ const resetSelfies = () => {
   sessionId.value = null;
 };
 
+const resetSession = async () => {
+  // reset state
+  captures.value = [];
+  sessionId.value = null;
+
+  // restart camera (biar clean)
+  stream?.getTracks().forEach((t) => t.stop());
+  stream = null;
+
+  await openCamera();
+};
+
 const handleCaptureClick = () => {
   captures.value.length < 3 ? capturePhoto() : resetSelfies();
 };
@@ -190,14 +202,18 @@ const downloadMerged = async () => {
     y += h;
   });
 
-  // 🔥 DRAW OVERLAY PNG (FULL CANVAS)
+  // overlay
   const overlay = await loadImage(overlaySrc);
   ctx.drawImage(overlay, 0, 0, width, height);
 
+  // download
   const link = document.createElement("a");
-  link.href = canvas.toDataURL("image/png"); // PNG supaya overlay transparan aman
+  link.href = canvas.toDataURL("image/png");
   link.download = "photobooth.png";
   link.click();
+
+  // 🔥 CLEAN SESSION AFTER DOWNLOAD
+  await resetSession();
 };
 </script>
 
