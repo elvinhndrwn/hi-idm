@@ -7,19 +7,22 @@
     <p class="text-slate-300 mb-6 text-center">Selpi bentar yaa~ 😆</p>
 
     <!-- Camera Preview -->
-    <div v-if="cameraOpen" class="relative w-full max-w-sm mb-4">
+    <div
+      v-if="cameraOpen"
+      class="relative w-full max-w-sm mb-4 aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-xl"
+    >
       <video
         ref="videoRef"
         autoplay
         playsinline
         muted
-        class="rounded-xl w-full mirror shadow-xl"
+        class="absolute inset-0 w-full h-full object-cover mirror"
       />
 
       <!-- Loading Overlay -->
       <div
         v-if="isUploading"
-        class="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl"
+        class="absolute inset-0 bg-black/50 flex items-center justify-center"
       >
         <span class="animate-pulse">Saving... ⏳</span>
       </div>
@@ -114,18 +117,39 @@ const capturePhoto = async () => {
   await new Promise((r) => requestAnimationFrame(r));
 
   const video = videoRef.value;
-  const scale = Math.min(720 / video.videoWidth, 1);
 
+  // target portrait ratio (3:4)
+  const targetRatio = 3 / 4;
+  const videoRatio = video.videoWidth / video.videoHeight;
+
+  let sx, sy, sw, sh;
+
+  if (videoRatio > targetRatio) {
+    // video terlalu lebar → crop kiri kanan
+    sh = video.videoHeight;
+    sw = sh * targetRatio;
+    sx = (video.videoWidth - sw) / 2;
+    sy = 0;
+  } else {
+    // video terlalu tinggi → crop atas bawah
+    sw = video.videoWidth;
+    sh = sw / targetRatio;
+    sx = 0;
+    sy = (video.videoHeight - sh) / 2;
+  }
+
+  // output portrait (mobile friendly)
   const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth * scale;
-  canvas.height = video.videoHeight * scale;
+  canvas.width = 720;
+  canvas.height = 960;
 
   const ctx = canvas.getContext("2d");
 
   // mirror selfie
   ctx.translate(canvas.width, 0);
   ctx.scale(-1, 1);
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
   const blob = await new Promise((resolve) =>
     canvas.toBlob(resolve, "image/jpeg", 0.7)
