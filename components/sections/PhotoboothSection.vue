@@ -2,34 +2,31 @@
   <section
     class="relative z-10 min-h-screen w-full flex flex-col items-center justify-center overflow-hidden text-white px-4 py-12"
   >
-    <h2 class="text-3xl md:text-4xl font-bold mb-6">Photobooth 📸</h2>
+    <h2 class="text-3xl font-bold mb-4">Photobooth 📸</h2>
 
-    <p class="text-slate-300 mb-8 max-w-xl text-center">
-      Selpi doonnggg, pengen liat kamooooo 👀
-    </p>
+    <p class="text-slate-300 mb-6 text-center">Selpi bentar yaa~ 😆</p>
 
     <!-- Camera Preview -->
-    <div v-if="cameraOpen" class="relative w-full max-w-md mb-6">
+    <div v-if="cameraOpen" class="relative w-full max-w-sm mb-4">
       <video
         ref="videoRef"
         autoplay
         playsinline
-        class="rounded-xl w-full"
-      ></video>
+        muted
+        class="rounded-xl w-full mirror shadow-xl"
+      />
 
       <!-- Loading Overlay -->
       <div
         v-if="isUploading"
-        class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl"
+        class="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl"
       >
-        <div class="text-white font-medium animate-pulse">
-          Saving, please wait... ⏳
-        </div>
+        <span class="animate-pulse">Saving... ⏳</span>
       </div>
     </div>
 
     <!-- Buttons -->
-    <div class="flex gap-4 flex-wrap justify-center mb-4">
+    <div class="flex gap-3 mb-4">
       <button v-if="!cameraOpen" class="btn-primary" @click="openCamera">
         Open Camera 🎥
       </button>
@@ -40,25 +37,26 @@
         :disabled="isUploading"
         @click="handleCaptureClick"
       >
-        <span v-if="isUploading">Saving... ⏳</span>
-        <span v-else>
-          {{
-            captures.length < 3
-              ? `Capture 📸 (${captures.length}/3)`
-              : "Ulangi Selfie 🔄"
-          }}
-        </span>
+        {{
+          captures.length < 3
+            ? `Capture 📸 (${captures.length}/3)`
+            : "Ulangi 🔄"
+        }}
       </button>
     </div>
 
-    <!-- Thumbnails -->
-    <div class="flex gap-4 flex-wrap justify-center mt-4">
+    <!-- Preview -->
+    <div class="flex gap-3 mt-4">
       <div
-        v-for="(photo, i) in captures"
+        v-for="photo in captures"
         :key="photo.id"
-        class="w-32 h-32 rounded-xl overflow-hidden"
+        class="w-24 h-24 rounded-lg overflow-hidden border border-white/20"
       >
-        <img :src="`/api/${photo.id}`" class="w-full h-full object-cover" />
+        <img
+          :src="`/api/${photo.id}`"
+          class="w-full h-full object-cover"
+          loading="lazy"
+        />
       </div>
     </div>
 
@@ -74,107 +72,110 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onUnmounted } from "vue";
 
 const videoRef = ref(null);
 const cameraOpen = ref(false);
 const isUploading = ref(false);
 const captures = ref([]);
 const sessionId = ref(null);
-const overlay = ref("/images/overlay.png");
 
-// Open camera
+/* 🔥 PATH OVERLAY PNG */
+const overlaySrc = "/images/overlay.png"; // <-- pastikan file ini ada di /public/images
+
+let stream = null;
+
+/* ================= CAMERA ================= */
+
 const openCamera = async () => {
   cameraOpen.value = true;
 
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" },
-    });
-    videoRef.value.srcObject = stream;
-  } catch (err) {
-    alert("Cannot access camera");
-    console.error(err);
-  }
+  stream = await navigator.mediaDevices.getUserMedia({
+    video: {
+      facingMode: "user",
+      width: { ideal: 720 },
+      height: { ideal: 1280 },
+    },
+  });
+
+  videoRef.value.srcObject = stream;
 };
 
-// Capture photo
+onUnmounted(() => {
+  stream?.getTracks().forEach((t) => t.stop());
+});
+
+/* ================= CAPTURE ================= */
+
 const capturePhoto = async () => {
-  if (captures.value.length >= 3 || isUploading.value) return;
+  if (isUploading.value || captures.value.length >= 3) return;
 
   isUploading.value = true;
+  await new Promise((r) => requestAnimationFrame(r));
+
+  const video = videoRef.value;
+  const scale = Math.min(720 / video.videoWidth, 1);
 
   const canvas = document.createElement("canvas");
-  canvas.width = videoRef.value.videoWidth;
-  canvas.height = videoRef.value.videoHeight;
+  canvas.width = video.videoWidth * scale;
+  canvas.height = video.videoHeight * scale;
 
   const ctx = canvas.getContext("2d");
 
-  // flip horizontal (anti mirror)
-  ctx.save();
+  // mirror selfie
   ctx.translate(canvas.width, 0);
   ctx.scale(-1, 1);
-  ctx.drawImage(videoRef.value, 0, 0, canvas.width, canvas.height);
-  ctx.restore();
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  const imageBase64 = canvas.toDataURL("image/png");
+  const blob = await new Promise((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.7)
+  );
+
+  const formData = new FormData();
+  formData.append("image", blob);
+  if (sessionId.value) formData.append("sessionId", sessionId.value);
 
   try {
-    const response = await $fetch("/api/photobooth", {
+    const res = await $fetch("/api/photobooth", {
       method: "POST",
-      body: {
-        imageBase64,
-        sessionId: sessionId.value,
-      },
+      body: formData,
     });
 
-    sessionId.value = response.data.sessionId;
-
-    captures.value.push({
-      id: response.data.id,
-    });
-  } catch (err) {
-    console.error("Upload failed:", err);
+    sessionId.value = res.data.sessionId;
+    captures.value.push({ id: res.data.id });
   } finally {
     isUploading.value = false;
   }
 };
 
-// Reset
 const resetSelfies = () => {
   captures.value = [];
   sessionId.value = null;
 };
 
-// Button handler
 const handleCaptureClick = () => {
-  if (captures.value.length < 3) {
-    capturePhoto();
-  } else {
-    resetSelfies();
-  }
+  captures.value.length < 3 ? capturePhoto() : resetSelfies();
 };
 
-// Download merged
+/* ================= DOWNLOAD + OVERLAY ================= */
+
+const loadImage = (src) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = src;
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+  });
+
 const downloadMerged = async () => {
-  const images = await Promise.all(
-    captures.value.map(
-      (c) =>
-        new Promise((resolve, reject) => {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          img.src = `/api/${c.id}`;
-          img.onload = () => resolve(img);
-          img.onerror = reject;
-        })
-    )
+  // load photos
+  const photos = await Promise.all(
+    captures.value.map((c) => loadImage(`/api/${c.id}`))
   );
 
-  const width = Math.max(...images.map((i) => i.width));
-  const height = images.reduce(
-    (sum, img) => sum + (img.height * width) / img.width,
-    0
-  );
+  const width = Math.max(...photos.map((i) => i.width));
+  const height = photos.reduce((s, i) => s + (i.height * width) / i.width, 0);
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -183,44 +184,33 @@ const downloadMerged = async () => {
   const ctx = canvas.getContext("2d");
 
   let y = 0;
-  images.forEach((img) => {
+  photos.forEach((img) => {
     const h = (img.height * width) / img.width;
     ctx.drawImage(img, 0, y, width, h);
     y += h;
   });
 
-  const overlayImg = new Image();
-  overlayImg.src = overlay.value;
-  await new Promise((r) => (overlayImg.onload = r));
-
-  ctx.drawImage(overlayImg, 0, 0, width, height);
+  // 🔥 DRAW OVERLAY PNG (FULL CANVAS)
+  const overlay = await loadImage(overlaySrc);
+  ctx.drawImage(overlay, 0, 0, width, height);
 
   const link = document.createElement("a");
-  link.href = canvas.toDataURL("image/png");
-  link.download = "merged_selfies.png";
+  link.href = canvas.toDataURL("image/png"); // PNG supaya overlay transparan aman
+  link.download = "photobooth.png";
   link.click();
 };
 </script>
 
 <style scoped>
 .btn-primary {
-  padding: 10px 24px;
+  padding: 10px 22px;
   border-radius: 999px;
   background: linear-gradient(135deg, #c7b8ff, #a5d8ff);
   color: #1a1a2e;
   font-weight: 500;
-  border: none;
-  cursor: pointer;
 }
 
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-video {
-  border-radius: 16px;
-  box-shadow: 0 0 40px rgba(200, 180, 255, 0.5);
+.mirror {
   transform: scaleX(-1);
 }
 </style>
