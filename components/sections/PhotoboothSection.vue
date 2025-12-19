@@ -2,34 +2,36 @@
   <section
     class="relative z-10 min-h-screen w-full flex flex-col items-center justify-center overflow-hidden text-white px-4 py-12"
   >
-    <h2 class="text-3xl font-bold mb-4">Photobooth 📸</h2>
+    <h2 class="text-3xl md:text-4xl font-bold mb-4">Photobooth 📸</h2>
 
-    <p class="text-slate-300 mb-6 text-center">Selpi bentar yaa~ 😆</p>
+    <p class="text-slate-300 mb-6 max-w-xl text-center">
+      Selpi doonnggg, pengen liat kamooooo 👀
+    </p>
 
-    <!-- Camera Preview -->
+    <!-- CAMERA PREVIEW -->
     <div
       v-if="cameraOpen"
-      class="relative w-full max-w-sm mb-4 aspect-[3/4] bg-black rounded-xl overflow-hidden shadow-xl"
+      class="relative w-full max-w-xs aspect-[3/4] mb-6 rounded-xl overflow-hidden"
     >
       <video
         ref="videoRef"
         autoplay
         playsinline
         muted
-        class="absolute inset-0 w-full h-full object-cover mirror"
+        class="w-full h-full object-contain mirror"
       />
 
       <!-- Loading Overlay -->
       <div
         v-if="isUploading"
-        class="absolute inset-0 bg-black/50 flex items-center justify-center"
+        class="absolute inset-0 flex items-center justify-center bg-black/50"
       >
-        <span class="animate-pulse">Saving... ⏳</span>
+        <div class="animate-pulse">Saving... ⏳</div>
       </div>
     </div>
 
-    <!-- Buttons -->
-    <div class="flex gap-3 mb-4">
+    <!-- BUTTONS -->
+    <div class="flex gap-3 flex-wrap justify-center mb-3">
       <button v-if="!cameraOpen" class="btn-primary" @click="openCamera">
         Open Camera 🎥
       </button>
@@ -43,27 +45,28 @@
         {{
           captures.length < 3
             ? `Capture 📸 (${captures.length}/3)`
-            : "Ulangi 🔄"
+            : "Ulangi Selfie 🔄"
         }}
       </button>
     </div>
 
-    <!-- Preview -->
-    <div class="flex gap-3 mt-4">
+    <!-- REFRESH PAGE -->
+    <button class="btn-secondary" @click="forceReload">
+      Klik ini kalo nge-blank yak 🔄
+    </button>
+
+    <!-- THUMBNAILS -->
+    <div class="flex gap-3 flex-wrap justify-center mt-5">
       <div
         v-for="photo in captures"
         :key="photo.id"
-        class="w-24 h-24 rounded-lg overflow-hidden border border-white/20"
+        class="w-24 h-32 rounded-lg overflow-hidden"
       >
-        <img
-          :src="`/api/${photo.id}`"
-          class="w-full h-full object-cover"
-          loading="lazy"
-        />
+        <img :src="`/api/${photo.id}`" class="w-full h-full object-cover" />
       </div>
     </div>
 
-    <!-- Download -->
+    <!-- DOWNLOAD -->
     <button
       v-if="captures.length === 3"
       class="btn-primary mt-6"
@@ -75,38 +78,37 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted } from "vue";
+import { ref, onBeforeUnmount } from "vue";
 
 const videoRef = ref(null);
 const cameraOpen = ref(false);
 const isUploading = ref(false);
 const captures = ref([]);
 const sessionId = ref(null);
-
-/* 🔥 PATH OVERLAY PNG */
-const overlaySrc = "/images/overlay.png"; // <-- pastikan file ini ada di /public/images
-
-let stream = null;
+const overlay = "/images/overlay.png";
 
 /* ================= CAMERA ================= */
 
 const openCamera = async () => {
   cameraOpen.value = true;
 
-  stream = await navigator.mediaDevices.getUserMedia({
+  const stream = await navigator.mediaDevices.getUserMedia({
     video: {
       facingMode: "user",
-      width: { ideal: 720 },
-      height: { ideal: 1280 },
     },
   });
 
   videoRef.value.srcObject = stream;
 };
 
-onUnmounted(() => {
-  stream?.getTracks().forEach((t) => t.stop());
+onBeforeUnmount(() => {
+  stopCamera();
 });
+
+const stopCamera = () => {
+  const stream = videoRef.value?.srcObject;
+  stream?.getTracks().forEach((t) => t.stop());
+};
 
 /* ================= CAPTURE ================= */
 
@@ -118,41 +120,19 @@ const capturePhoto = async () => {
 
   const video = videoRef.value;
 
-  // target portrait ratio (3:4)
-  const targetRatio = 3 / 4;
-  const videoRatio = video.videoWidth / video.videoHeight;
-
-  let sx, sy, sw, sh;
-
-  if (videoRatio > targetRatio) {
-    // video terlalu lebar → crop kiri kanan
-    sh = video.videoHeight;
-    sw = sh * targetRatio;
-    sx = (video.videoWidth - sw) / 2;
-    sy = 0;
-  } else {
-    // video terlalu tinggi → crop atas bawah
-    sw = video.videoWidth;
-    sh = sw / targetRatio;
-    sx = 0;
-    sy = (video.videoHeight - sh) / 2;
-  }
-
-  // output portrait (mobile friendly)
   const canvas = document.createElement("canvas");
-  canvas.width = 720;
-  canvas.height = 960;
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
 
   const ctx = canvas.getContext("2d");
 
-  // mirror selfie
+  // mirror selfie (SAMA DENGAN PREVIEW)
   ctx.translate(canvas.width, 0);
   ctx.scale(-1, 1);
-
-  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(video, 0, 0);
 
   const blob = await new Promise((resolve) =>
-    canvas.toBlob(resolve, "image/jpeg", 0.7)
+    canvas.toBlob(resolve, "image/jpeg", 0.75)
   );
 
   const formData = new FormData();
@@ -172,76 +152,79 @@ const capturePhoto = async () => {
   }
 };
 
+/* ================= RESET ================= */
+
 const resetSelfies = () => {
   captures.value = [];
   sessionId.value = null;
-};
 
-const resetSession = async () => {
-  // reset state
-  captures.value = [];
-  sessionId.value = null;
-
-  // restart camera (biar clean)
+  // stop camera stream
+  const stream = videoRef.value?.srcObject;
   stream?.getTracks().forEach((t) => t.stop());
-  stream = null;
 
-  await openCamera();
+  cameraOpen.value = false;
 };
 
 const handleCaptureClick = () => {
   captures.value.length < 3 ? capturePhoto() : resetSelfies();
 };
 
-/* ================= DOWNLOAD + OVERLAY ================= */
-
-const loadImage = (src) =>
-  new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = src;
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-  });
+/* ================= DOWNLOAD ================= */
 
 const downloadMerged = async () => {
-  // load photos
-  const photos = await Promise.all(
-    captures.value.map((c) => loadImage(`/api/${c.id}`))
+  const images = await Promise.all(
+    captures.value.map(
+      (c) =>
+        new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.src = `/api/${c.id}`;
+          img.onload = () => resolve(img);
+        })
+    )
   );
 
-  const width = Math.max(...photos.map((i) => i.width));
-  const height = photos.reduce((s, i) => s + (i.height * width) / i.width, 0);
+  const width = images[0].width;
+  const height = images.reduce((s, i) => s + i.height, 0);
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
 
   const ctx = canvas.getContext("2d");
-
   let y = 0;
-  photos.forEach((img) => {
-    const h = (img.height * width) / img.width;
-    ctx.drawImage(img, 0, y, width, h);
-    y += h;
+
+  images.forEach((img) => {
+    ctx.drawImage(img, 0, y);
+    y += img.height;
   });
 
-  // overlay
-  const overlay = await loadImage(overlaySrc);
-  ctx.drawImage(overlay, 0, 0, width, height);
+  const overlayImg = new Image();
+  overlayImg.src = overlay;
+  await new Promise((r) => (overlayImg.onload = r));
 
-  // download
+  ctx.drawImage(overlayImg, 0, 0, width, height);
+
   const link = document.createElement("a");
   link.href = canvas.toDataURL("image/png");
   link.download = "photobooth.png";
   link.click();
 
-  // 🔥 CLEAN SESSION AFTER DOWNLOAD
-  await resetSession();
+  resetSelfies();
+};
+
+/* ================= REFRESH ================= */
+
+const forceReload = () => {
+  window.location.reload();
 };
 </script>
 
 <style scoped>
+.mirror {
+  transform: scaleX(-1);
+}
+
 .btn-primary {
   padding: 10px 22px;
   border-radius: 999px;
@@ -250,7 +233,14 @@ const downloadMerged = async () => {
   font-weight: 500;
 }
 
-.mirror {
-  transform: scaleX(-1);
+.btn-primary:disabled {
+  opacity: 0.6;
+}
+
+.btn-secondary {
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 </style>
